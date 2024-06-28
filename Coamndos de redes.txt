@@ -1,0 +1,137 @@
+Configurar segurança aprimorada para logins virtuais
+
+4.3.1
+Melhorar o processo de login
+A atribuição de senhas e autenticação local não impede que um dispositivo seja direcionado para ataque. Os aprimoramentos de login do Cisco IOS fornecem mais segurança diminuindo ataques, tais como ataques de dicionário e ataques DoS. Ativar um perfil de detecção permite que você configure um dispositivo de rede para reagir a tentativas repetidas com falha de login recusando solicitações de conexão adicionais (ou bloqueio de login). Este bloco pode ser configurado por um período de tempo, que é chamado de período silencioso. As listas de controle de acesso (ACLs) podem ser usadas para permitir conexões legítimas de endereços de administradores de sistema conhecidos.
+
+Os banners são desativados por padrão e devem estar explicitamente ativados. Use o comando do modo de configuração global banner para especificar as mensagens apropriadas.
+
+Router(config)# banner { motd | exec | login } delimiter message delimiter
+Banners protegem a organização de uma perspectiva legal. Escolher o texto apropriado para colocar em mensagens de banner é importante e deve ser revisto por advogado legal antes de ser colocado em roteadores de rede. Nunca use a palavra bem-vindo ou qualquer outra saudação familiar que possa ser interpretada mal como um convite para usar a rede. Veja a seguir um exemplo de um banner apropriado.
+
+This equipment is privately owned and access 
+is logged. Disconnect immediately if you are 
+not an authorized user. Violators will be 
+prosecuted to the fullest extent of the law.
+User Access Verification:
+
+Username:
+
+4.3.2
+Configurar recursos de aprimoramento de login
+Os comandos de aprimoramentos de login do Cisco IOS, que são mostrados abaixo, aumentam a segurança das conexões de login virtuais.
+
+ Router(config)# login block-for seconds attempts tries within seconds
+ Router(config)# login quiet-mode access-class {acl-name | acl-number}
+ Router(config)# login delay seconds
+ Router(config)# login on-success log [every login]
+ Router(config)# login on-failure log [every login]
+A figura mostra uma configuração de exemplo. O comando login block-for pode se defender contra ataques DoS desativando logins após um número especificado de tentativas de login com falha. O comando login quiet-mode mapeia a uma ACL que identifique os hosts permitidos. Isto assegura-se de que somente os anfitriões autorizados possam tentar fazer login no roteador. O comando login delay especifica um número de segundos que o usuário deve esperar entre tentativas de login mal sucedidas. Os comandos login on-success e login on-failure registram tentativas de login bem-sucedidas e malsucedidas.
+
+Esses aprimoramentos de login não se aplicam a conexões de console. Ao lidar com conexões de console, supõe-se que somente o pessoal autorizado tenha acesso físico aos dispositivos.
+
+Nota: Estes aprimoramentos de início de uma sessão podem somente ser permitidos se o base de dados local é usado para a autenticação para o acesso local e remoto. Se as linhas são configuradas apenas para autenticação de senha, a seguir os recursos de login aprimorados não estão habilitados.
+
+R1(config)# login block-for 15 attempts 5 within 60 
+R1(config)# ip access-list standard PERMIT-ADMIN
+R1(config-std-nacl)# remark Permit only Administrative hosts     
+R1(config-std-nacl)# permit 192.168.10.10
+R1(config-std-nacl)# permit 192.168.11.10 
+R1(config-std-nacl)# exit 
+R1(config)# login quiet-mode access-class PERMIT-ADMIN   
+R1(config)# login delay 10  
+R1(config)# login on-success log  
+R1(config)# login on-failure log  
+R1(config)#
+
+4.3.3
+Ativar aprimoramentos de login
+Para ajudar um dispositivo Cisco IOS a fornecer detecção de DoS, use o comando login block-for. Todos os outros recursos de aprimoramento de login são desabilitados até que o comando login block-for esteja configurado.
+
+Especificamente, o comando login block-for monitora a atividade do dispositivo de login e opera em dois modos:
+
+Modo normal - Isso também é conhecido como modo de relógio. O roteador mantém a contagem do número de tentativas de login falhadas dentro de uma quantidade de tempo identificada.
+Modo silencioso - Este também é conhecido como o período de silêncio. Se o número de logins com falha exceder o limite configurado, todas as tentativas de login usando telnet, ssh e http são negadas para o tempo especificado no comando login block-for.
+Quando o modo silencioso está ativado, todas as tentativas de login, incluindo acesso administrativo válido, não são permitidas. No entanto, para fornecer hosts críticos, como acesso de hosts administrativos específicos em todos os momentos, esse comportamento pode ser substituído usando uma ACL. O ACL é criado e identificado usando o comando login quiet-mode access-class. Somente os anfitriões identificados no ACL têm o acesso ao dispositivo durante o modo silencioso.
+
+O exemplo na figura mostra uma configuração que use uma ACL que seja nomeada PERMIT-ADMIN. Os hosts que combinam as condições PERMIT-ADMIN estão isentos do modo silencioso.
+
+R1(config)# ip access-list standard PERMIT-ADMIN       
+R1(config-std-nacl)# remark Permit only Administrative hosts   
+R1(config-std-nacl)# permit 192.168.10.10                       
+R1(config-std-nacl)# permit 192.168.11.10 
+R1(config-std-nacl)# exit 
+R1(config)# login quiet-mode access-class  PERMIT-ADMIN 
+Ao implementar o comando login block-for, um atraso de um segundo entre as tentativas de login é automaticamente invocado. Para tornar mais difícil para um invasor, o tempo de atraso entre as tentativas de login pode ser aumentado usando o comando login delay seconds, conforme mostrado na figura. O comando introduz um atraso uniforme entre tentativas sucessivas de login. O atraso ocorre para todas as tentativas de login, incluindo tentativas com falha ou bem-sucedidas. O exemplo configura, um atraso de três segundos entre a tentativa de login sucessiva.
+
+Este comando ajuda a mitigar ataques de dicionário. É um comando opcional. Se não estiver definido, um atraso padrão de um segundo for aplicado após o comando login block-for estar configurado.
+
+Os comando login block-for, login quiet-mode access-class e login delay ajudam a bloquear tentativas de login falhadas por um período limitado de tempo. No entanto, eles não podem impedir que um atacante tente novamente. Como um administrador pode saber quando alguém tenta obter acesso à rede adivinhando a senha?
+
+R1(config)# login delay  3 
+
+4.3.4
+Tentativas de falha de log
+Há três comandos que podem ser configurados para ajudar um administrador a detectar um ataque de senha, segundo as indicações da figura. Cada comando permite que um dispositivo gere mensagens do syslog para tentativas de login falhadas ou bem-sucedidas.
+
+Os dois primeiros comandos, login on-success log e login on-failure log, geram mensagens do syslog para tentativas de login bem-sucedidas e mal sucedidas. O número de tentativas de login antes de uma mensagem de registro é gerada pode ser especificada usando a sintaxe [every login], onde o valor padrão login é 1 tentativa. O intervalo válido é de 1 a 65.535.
+
+ Router(config)# login on-success log [every login]
+ Router(config)# login on-failure log [every login]
+Como uma alternativa ao comando login on-failure log, o comando security authentication failure rate pode ser configurado para gerar uma mensagem de log quando a taxa de falha de login é excedida.
+
+ Router(config)# security authentication failure rate threshold-rate log
+Use o comando show login para verificar as configurações do comando login block-for e o modo atual. Na figura, o R1 foi configurado para bloquear anfitriões de login por 120 segundos se mais de cinco solicitações de login falharem dentro de 60 segundos. R1 também confirma que o modo atual é normal e que houve quatro falhas de login nos últimos 55 segundos porque há cinco segundos restantes no modo normal.
+
+R1# show login
+    A login delay for 10 sec is applied.
+    Quiet-Mode access list PERMIT-ADMIN is applied.
+
+    Router enabled to watch for login Attacks.
+    If more than 5 login failures occur in 60 sec or less,
+    login will be disabled for 120 secs.
+
+    Router presently in Normal-Mode.
+    Current Watch Window
+        Time remaining: 5 seconds.
+        Login failures for current window: 4.
+    Total login failures:4.
+As duas figuras a seguir exibem exemplos do que ocorre quando o limite de tentativa com falha é excedido.
+
+Tentativas de Login com Falha
+The figure shows a PuTTy C L I where the user is trying to log in to 10.1.100.253. They have been denied twice.
+Excedendo o limite de tentativa com falha
+The figure shows a PuTTy C L I where the user is trying to log in to 10.1.100.253. They have been denied so many times that the failed attempt threshold has been crossed and a network error: connection refused error is displayed.
+A saída de comando a seguir exibe o status resultante usando o comando show login. Observe que agora está no modo silencioso e permanecerá no modo silencioso por mais 105 segundos. O R1 igualmente identifica que o PERMIT-ADMIN ACL contém uma lista de anfitriões permitidos conectar durante o modo silencioso.
+
+R1#
+*Dec 10 15:38:54.455: %SEC_LOGIN-1-QUIET_MODE_ON: Still timeleft for watching failures
+is 12 secs, [user: admin] [Source: 10.10.10.10] [localport: 23] [Reason: Login
+Authentication Failed - BadUser] [ACL: PERMIT-ADMIN] at 15:38:54 UTC Wed Dec 10 2008
+
+R1# show login
+     A login delay of 3 seconds is applied.
+     Quiet-Mode access list PERMIT-ADMIN is applied.
+
+     Router enabled to watch for login Attacks.
+     If more than 5 login failures occur in 60 seconds or
+     less,logins will be disabled for 120 seconds.
+
+     Router presently in Quiet-Mode.
+Will remain in Quiet-Mode for 105 seconds.
+Restricted logins filtered by applied ACL PERMIT-ADMIN.
+
+R1#
+O comando show login failures exibe informações adicionais sobre as tentativas malsucedidas, como o endereço IP de origem das tentativas de login malsucedidas. A figura exibe um exemplo de saída do comando show login failures.
+
+R1# show login failures
+Total failed logins: 22
+Detailed information about last 50 failures
+
+Username    SourceIPAddr    lPort Count TimeStamp
+admin       1.1.2.1         23    5     15:38:54 UTC Wed Dec 10 2008
+Admin       10.10.10.10     23    13    15:58:43 UTC Wed Dec 10 2008
+admin       10.10.10.10     23    3     15:57:14 UTC Wed Dec 10 2008
+cisco       10.10.10.10     23    1     15:57:21 UTC Wed Dec 10 2008
+
+R1# 
