@@ -1,0 +1,224 @@
+
+
+
+Configurar CLI com base em funções
+
+
+Acesso CLI baseado em função
+Em um esforço para fornecer mais flexibilidade do que os níveis de privilégio permitem, a Cisco introduziu o recurso de acesso CLI baseado em função no Cisco IOS Release 12.3 (11) T. Esse recurso fornece acesso mais refinado e granular, controlando quais comandos estão disponíveis para funções específicas. O acesso CLI baseado em função permite que o administrador de rede crie diferentes pontos de vista das configurações de roteador para usuários diferentes. Cada vista define os comandos CLI que cada usuário pode alcançar.
+
+Segurança
+
+O acesso CLI baseado em função aumenta a segurança do dispositivo definindo o conjunto de comandos CLI que são acessíveis por um usuário específico. Além disso, os administradores podem controlar o acesso do usuário a portas específicas, interfaces lógicas e slots em um roteador. Isso impede que um usuário altere acidentalmente ou propositadamente uma configuração ou colete informações às quais não deve ter acesso.
+
+Disponibilidade
+
+O acesso à CLI baseado em função impede a execução não intencional de comandos CLI por pessoal não autorizado e minimiza o tempo de inatividade.
+
+Eficiência operacional
+
+Os usuários veem somente os comandos CLI aplicáveis às portas e ao CLI a que têm o acesso. Consequentemente, o roteador parece ser menos complexo, e os comandos são mais fáceis de identificar ao usar o recurso de ajuda no dispositivo.
+
+
+
+Exibições baseadas em função
+A CLI baseada em função fornece três tipos de pontos de vista que ditam quais comandos estão disponíveis:
+
+Exibição Raiz
+
+Para configurar qualquer exibição para o sistema, o administrador deve estar na exibição raiz. A exibição raiz tem os mesmos privilégios de acesso que um usuário que tem privilégios de nível 15. No entanto, uma visualização raiz não é a mesma que um usuário de nível 15. Somente um usuário de exibição raiz pode configurar uma nova exibição e adicionar ou remover comandos das exibições existentes.
+
+Visualização CLI
+
+Um conjunto específico de comandos pode ser empacotado em uma opinião CLI. Ao contrário dos níveis de privilégio, uma visualização CLI não tem hierarquia de comando e nenhuma visão superior ou inferior. Cada exibição deve receber todos os comandos associados a essa exibição. Uma exibição não herda comandos de nenhuma outra exibição. Além disso, os mesmos comandos podem ser usados em várias exibições.
+
+Superview
+
+Uma superview consiste em uma ou mais visualizações CLI. Os administradores podem definir quais comandos são aceitos e quais informações de configuração são visíveis. Superviews permitem que um administrador de rede atribua usuários e grupos de visualizações múltiplas CLI dos usuários ao mesmo tempo, em vez de ter que atribuir uma única visão CLI pelo usuário com todos os comandos associados a essa uma visão CLI.
+
+Superviews têm várias características específicas:
+
+Uma única visualização CLI pode ser compartilhada em várias superviews.
+Os comandos não podem ser configurados para uma superview. Um administrador deve adicionar comandos à opinião CLI e adicionar essa opinião CLI ao superview.
+Os usuários que são registrados em um superview podem alcançar todos os comandos que são configurados para alguns dos pontos de vista CLI que são parte do superview.
+Cada superview tem uma senha usada para alternar entre superviews ou de uma visualização CLI a um superview.
+A exclusão de um superview não suprime das visualizações CLI associadas. As visualizações CLI permanecem disponíveis para serem atribuídas a outra superview.
+
+
+Configurar exibições baseadas em função
+Antes que um administrador possa criar uma vista, o AAA deve ser permitido usando o comando aaa new-model. Para configurar e editar visualizações, um administrador deve efetuar login como visualização root usando o comando EXEC privilegiado enable view. O comando enable view root também pode ser usado. Quando solicitado, digite enable secret senha.
+
+Há cinco etapas para criar e gerenciar uma exibição específica.
+
+Etapa 1. Habilite AAA com o comando do modo de configuração global aaa new-model. Sair e insira a exibição raiz com o comando enable view.
+
+Parâmetro
+
+Descrição
+
+view
+Este parâmetro incorpora a vista raiz se nenhum view-name for especificado, que permite que um administrador configure visualizações CLI. O parâmetro view é exigido para configurar uma opinião CLI.
+
+view-name
+(Opcional) Este parâmetro entra ou sai de uma exibição CLI especificada. Este parâmetro pode ser usado para alternar de uma opinião CLI a uma outra opinião CLI.
+
+ Router# enable [view [view-name]]
+Etapa 2. Crie uma visualização usando o comando do modo de configuração global parser view view-name. Isso habilita o modo de configuração de exibição. Excluindo a visualização raiz, há um limite máximo de 15 visualizações no total.
+
+ Router(config)# parser view view-name
+Etapa 3. Atribua uma senha secreta à visualização usando o comando do modo de configuração secret password view.
+
+Isso define uma senha para proteger o acesso à superview. A senha deve ser criada imediatamente após a criação de uma exibição, caso contrário, uma mensagem de erro aparecerá.
+
+ Router(config-view)# secret password
+Etapa 4. Atribua comandos à visualização selecionada usando o comando commands parser-mode no modo de configuração da visualização.
+
+ Router(config-view)# commands parser-mode {include | include-exclusive | exclude} [all] [interface interface-name | command]
+Comandos
+
+Descrição
+
+commands 
+Adiciona comandos ou interfaces a uma exibição.
+
+parser-mode 
+O modo em que o comando especificado existe; por exemplo, modo EXEC.
+
+include 
+Adiciona um comando ou uma interface à exibição e permite que o mesmo comando ou interface seja adicionado a outras exibições.
+
+include-exclusive 
+Adiciona um comando ou uma interface à exibição e exclui que o mesmo comando ou interface seja adicionado a todas as outras exibições.
+
+exclude 
+Exclui um comando ou uma interface da exibição.
+
+all 
+Um “curinga” que permite que cada comando em um modo de configuração especificado que comece com a mesma palavra-chave ou cada subinterface para uma interface especificada para fazer parte da exibição.
+
+interface interface-name 
+Interface que é adicionada à exibição.
+
+command 
+Comando que é adicionado à exibição.
+
+Etapa 5. Sair do modo de configuração da vista digitando o comando exit.
+
+O exemplo abaixo mostra a configuração de três visualizações. Observe no exemplo, que o comando secret apoia somente a criptografia MD5 (tipo 5). Além disso, observe que quando um comando foi adicionado a uma exibição antes que a senha fosse atribuída, ocorreu um erro.
+
+R1(config)# aaa new-model
+R1(config)# parser view SHOWVIEW
+R1(config-view)#  secret ? 
+0     Specifies an UNENCRYPTED password will follow
+5     Specifies an ENCRYPTED secret will follow
+LINE  The UNENCRYPTED (cleartext) view secret string
+R1(config-view)# secret cisco
+R1(config-view)# commands exec include show
+R1(config-view)# exit
+R1(config)#  parser view VERIFYVIEW 
+R1(config-view)#  commands exec include ping 
+% Password not set for the view VERIFYVIEW  
+R1(config-view)#  secret cisco5 
+R1(config-view)#  commands exec include ping 
+R1(config-view)# exit
+R1(config)# parser view REBOOTVIEW
+R1(config-view)# secret cisco10
+R1(config-view)# commands exec include reload
+R1(config-view)# exit
+R1(config)#
+Verifique a configuração da interface usando o comando show running-config, conforme mostrado.
+
+R1# show running-config 
+<output omitted>
+parser view SHOWVIEW 
+  secret 5 $1$GL2J$8njLecwTaLAc0UuWo1/Fv0 
+  commands exec include show 
+! 
+parser view VERIFYVIEW 
+  secret 5 $1$d08J$1zOYSI4WainGxkn0Hu7lP1 
+  commands exec include ping 
+! 
+parser view REBOOTVIEW 
+  secret 5 $1$L7lZ$1Jtn5IhP43fVE7SVoF1pt. 
+  commands exec include reload 
+!
+
+
+
+Verificar exibições de CLI baseadas em função
+Para verificar uma exibição, use o comando enable view. Digite o nome da exibição a ser verificada e forneça a senha para fazer login na exibição. Use o comando ponto de interrogação (?) para verificar se os comandos disponíveis na exibição estão corretos.
+
+O exemplo ativa a superview USER e lista os comandos disponíveis na exibição.
+
+R1# enable view USER
+Password: <cisco1> 
+ 
+R1# ?
+Exec commands: 
+  <0-0>/<0-4>  Enter card slot/sublot number 
+  do-exec      Mode-independent "do-exec" prefix support 
+  enable       Turn on privileged commands 
+  exit         Exit from the EXEC 
+  show         Show running system information 
+ 
+R1# show ?    banner      Display banner information 
+  flash0:     display information about flash0: file system 
+  flash1:     display information about flash1: file system 
+  flash:      display information about flash: file system 
+  parser      Display parser information 
+  usbflash0:  display information about usbflash0: file system
+O exemplo abaixo ativa a superview SUPPORT e lista os comandos disponíveis na exibição.
+
+R1# enable view SUPPORT
+Password: <cisco1> 
+ 
+R1# ?
+Exec commands: 
+  <0-0>/<0-4>  Enter card slot/sublot number 
+  do-exec      Mode-independent "do-exec" prefix support 
+  enable       Turn on privileged commands 
+  exit         Exit from the EXEC 
+  ping         Send echo messages 
+  show         Show running system information 
+ 
+R1#
+Este exemplo habilita a visualização JR-ADMIN e lista os comandos disponíveis na exibição.
+
+R1# enable view JR-ADMIN
+Password:  
+ 
+R1# ?
+Exec commands: 
+  <0-0>/<0-4>  Enter card slot/sublot number 
+  do-exec      Mode-independent "do-exec" prefix support 
+  enable       Turn on privileged commands 
+  exit         Exit from the EXEC 
+  ping         Send echo messages 
+  reload       Halt and perform a cold restart 
+  show         Show running system information 
+ 
+R1#
+Ao não especificar uma exibição para o comando enable view, como mostrado aqui, você pode fazer login como root. A partir da visualização raiz, use o comando show parser view all para ver um resumo de todas as exibições. Observe como o asterisco identifica superviews.
+
+R1# show parser view 
+Current view is 'JR-ADMIN' 
+
+R1# enable view 
+Password:  
+
+R1# show parser view 
+Current view is 'root' 
+
+R1# show parser view all 
+Views/SuperViews Present in System: 
+  SHOWVIEW 
+  VERIFYVIEW 
+  REBOOTVIEW 
+  USER *  
+
+  SUPPORT * 
+
+  JR-ADMIN * 
+
+-------(*) represent superview------- 
+R1#

@@ -1,0 +1,627 @@
+Objetivo do módulo: Implementar a gestão segura e o monitoramento de dispositivos de rede.
+
+Título do Tópico
+
+Objetivo do Tópico
+
+Protegendo arquivos de imagem e configuração do Cisco IOS
+
+Explique como o recurso de configuração resiliente do Cisco IOS e o Secure Copy são usados para proteger os arquivos de imagem e configuração do Cisco IOS.
+
+Bloqueando um roteador usando o AutoSecure
+
+Use AutoSecure para permitir a segurança em Roteadores baseados em IOS.
+
+Autenticação de Protocolo de Roteamento
+
+Explique como configurar a autenticação do protocolo de roteamento.
+
+Gerenciamento e relatórios seguros
+
+Comparar o acesso de gerenciamento dentro e fora da banda.
+
+Usando o Syslog para Segurança de Rede
+
+Explique como configurar o syslog para registrar eventos do sistema.
+
+Usando NTP
+
+Configurar NTP para permitir a marcação de data/hora exata entre todos os dispositivos.
+
+Usando SNMP para Segurança de Rede
+
+Configurar o SNMP para monitorar o status do sistema.
+
+
+
+Protegendo arquivos de imagem e configuração do Cisco IOS
+
+6.1.1
+Recurso de configuração resiliente do Cisco IOS
+O recurso de configuração resiliente do Cisco IOS permite uma recuperação mais rápida se alguém de forma maliciosamente ou não involuntariamente reformata a memória flash ou apaga o arquivo de configuração de inicialização na memória de acesso aleatório não volátil (NVRAM). Este atributo mantém uma cópia de trabalho segura do arquivo de imagem do IOS do roteador e uma cópia do arquivo de configuração de execução. Esses arquivos seguros não podem ser removidos pelo usuário e são chamados de conjunto de inicialização principal.
+
+Estão aqui alguns fatos sobre a configuração resiliente do Cisco IOS:
+
+O arquivo de configuração no bootset principal é uma cópia da configuração running que estava no roteador quando a característica foi habilitada primeiramente.
+O recurso protege o menor conjunto de arquivos de trabalho para preservar o espaço de armazenamento persistente.
+Nenhum espaço extra é exigido para proteger o arquivo de imagem preliminar do Cisco IOS. O recurso detecta automaticamente a incompatibilidade da imagem ou da versão de configuração.
+Somente o armazenamento local é usado para proteger arquivos, eliminando desafios de manutenção de escalabilidade do armazenamento de várias imagens e configurações em servidores TFTP.
+O recurso só pode ser desativado por meio de uma sessão de console.
+Nota: A característica está somente disponível no Roteadores mais velhos que apoiam uma relação do flash do acessório da tecnologia avançada de PCMCIA (ATA). Os roteadores mais novos tais como o ISR 4000 não apoiam esta característica.
+
+
+6.1.2
+Habilitando o recurso de resiliência de imagem do IOS
+Os comandos para proteger a imagem do IOS e o arquivo de configuração em execução são mostrados na figura. Para proteger a imagem do IOS e habilitar a resiliência da imagem do Cisco IOS, use o comando do modo de configuração global secure boot-image. Quando permitido pela primeira vez, a imagem do Cisco IOS em execução é fixada e uma entrada de log é gerada. O recurso de resiliência de imagem do Cisco IOS só pode ser desabilitado por meio de uma sessão de console usando a forma do comando no. Este comando funciona corretamente somente quando o sistema está configurado para executar uma imagem a partir de uma unidade flash com uma interface ATA. Além disso, a imagem em execução deve ser carregada do armazenamento persistente para ser protegida como primária. As imagens carregadas de um local remoto, como um servidor TFTP, não podem ser protegidas.
+
+Para obter um instantâneo da configuração de execução do roteador e arquivá-lo com segurança no armazenamento persistente, use o comando do modo de configuração global secure boot-config, conforme mostrado na figura. Uma mensagem de log é exibida no console notificando o usuário de que a resiliência de configuração está ativada. O arquivo de configuração está escondido e não pode ser visto ou removido diretamente da alerta CLI. Você pode usar o comando secure boot-config repetidamente para atualizar o arquivo de configuração para uma versão mais recente após a emissão de novos comandos de configuração.
+
+Os arquivos protegidos não aparecem na saída de um comando dir emitido da CLI. Isso ocorre porque o sistema de arquivos do Cisco IOS impede que arquivos seguros sejam listados. A imagem em execução e os arquivos de configuração em execução não são visíveis na saída do comando dir. Use o comando show secure bootset para verificar a existência do arquivo, conforme mostrado na figura.
+
+R1(config)# secure boot-image
+R1(config)#
+Sep 22 12:47:10.183: %IOS_RESILIENCE-5-IMAGE_RESIL_ACTIVE: Successfully secured running image
+R1(config)#
+R1(config)# secure boot-config
+
+R1(config)#
+Sep 22 12:47:18.259: %IOS_RESILIENCE-5-CONFIG_RESIL_ACTIVE: Successfully secured config archive [flash0:.runcfg-20200922-124717.ar]
+R1(config)#
+R1(config)# exit
+R1#
+Sep 22 12:47:22.783: %SYS-5-CONFIG_I: Configured from console by console
+R1# show secure bootset
+IOS resilience router id FTX1449AJBJ
+
+IOS image resilience version 15.4 activated at 12:47:09 UTC Tue Sep 22 2020
+Secure archive flash0:c2900-universalk9-mz.SPA.154-3.M.bin type is image (elf) []
+  file size is 103727964 bytes, run size is 103907016 bytes
+  Runnable image, entry point 0x81000000, run from ram
+
+IOS configuration resilience version 15.4 activated at 12:47:18 UTC Tue Sep 22 2020
+Secure archive flash0:.runcfg-20200922-124717.ar type is config
+configuration archive size 1683 bytes
+
+R1#
+
+6.1.3
+A imagem principal do Bootset
+Restaure um bootset primário de um arquivo seguro após o roteador ter sido adulterado, segundo as indicações da figura:
+
+Etapa 1. Recarregue o roteador usando o comando reload. Se necessário, emita a sequência de interrupção para entrar no modo ROM monitor (ROMmon).
+
+Etapa 2. No modo ROMmon, digite o comando dir para listar o conteúdo do dispositivo que contém o arquivo do conjunto de inicialização seguro.
+
+Etapa 3. Inicialize o roteador com a imagem do conjunto de inicialização seguro usando o comando boot seguido pelo local da memória flash (por exemplo, flash0), dois pontos e o nome do arquivo encontrado na Etapa 2.
+
+Etapa 4. Entre no modo de configuração global e restaure a configuração segura para um nome de arquivo de sua escolha usando o comando secure boot-config restore seguido pelo local da memória flash (por exemplo, flash0), dois pontos e um nome de arquivo de sua escolha. Na figura, o nome do arquivo rescue-cfg é usado.
+
+Etapa 5. Saia do modo de configuração global e emita o comando copy para copiar o arquivo de configuração resgatado para a configuração em execução.
+
+Router# reload 
+<Issue Break sequence, if necessary> 
+rommon 1 > dir flash0: 
+program load complete, entry point: 0x80803000, size: 0x1b340 
+Directory of flash0: 
+ 
+4    103727964  -rw-     c2900-universalk9-mz.SPA.154-3.M.bin
+  
+ 
+rommon 2 > boot flash0:c2900-universalk9-mz.SPA.154-3.M.bin <Router reboots with specified image> 
+Router> enable 
+Router# conf t 
+Enter configuration commands, one per line.  End with CNTL/Z. 
+Router(config)# secure boot-config restore flash0:rescue-cfg 
+ios resilience:configuration successfully restored as flash0:rescue-cfg 
+ 
+Router(config)# end 
+Router# copy flash0:rescue-cfg running-config 
+Destination filename [running-config]?  
+%IOS image resilience is already active 
+%IOS configuration resilience is already active 
+ 
+2182 bytes copied in 0.248 secs (8798 bytes/sec) 
+ 
+R1#
+
+6.1.4
+Configurando Cópia Segura
+A característica resiliente do Cisco IOS fornece um método para proteger a imagem do IOS e os arquivos de configuração localmente no dispositivo. O recurso Secure Copy Protocol (SCP) é usado para copiar remotamente esses arquivos. O SCP fornece um método seguro e autenticado para copiar a configuração do roteador ou arquivos de imagem do roteador para um local remoto.
+
+SCP depende de:
+
+SSH para proteger a comunicação
+AAA para fornecer autenticação e autorização
+Nota: A configuração AAA será coberta em mais detalhes em um capítulo mais atrasado.
+
+Configurar o roteador para o SCP do servidor com AAA local:
+
+Etapa 1. Configurar o SSH, se ainda não configurado.
+
+Etapa 2. Para autenticação local, configure pelo menos um usuário de banco de dados local com nível de privilégio 15.
+
+Etapa 3. Habilite AAA com o comando do modo de configuração global aaa new-model.
+
+Etapa 4. Use o comando aaa authentication login default local para especificar que o banco de dados local seja usado para autenticação.
+
+Etapa 5. Use o comando aaa authorization exec default local para configurar a autorização do comando. Neste exemplo, todos os usuários locais terão acesso aos comandos EXEC.
+
+Etapa 6. Habilite a funcionalidade do lado do servidor SCP com o comando ip scp server enable.
+
+O R1 agora é um servidor SCP e usará conexões SSH para aceitar transferências de cópia seguras de usuários autenticados e autorizados. As transferências podem originar-se de qualquer cliente SCP se esse cliente é outro roteador, switch ou estação de trabalho.
+
+R1(config)# ip domain-name span.com 
+R1(config)# crypto key generate rsa general-keys modulus 2048 
+R1(config)# username Bob privilege 15 algorithm-type scrypt secret cisco12345 
+R1(config)# aaa new-model                          
+R1(config)# aaa authentication login default local 
+R1(config)# aaa authorization exec default local   
+R1(config)# ip scp server enable
+Esta figura demonstra um roteador à transferência SCP do roteador. Conforme mostrado na saída do comando abaixo, usaríamos o comando copy em R2 e especificaríamos primeiro o local do arquivo de origem (flash0: R2backup.cfg) e, em seguida, o destino (scp :). Responda a série de alertas para estabelecer uma conexão com o servidor SCP no R1.
+
+No R1, você pode inserir o debug ip scp comando para assistir a transferência continuar. O problema de autenticação mais comum é uma combinação incorreta de nome de usuário/senha. Há igualmente uma falha da autenticação se a combinação do nome de usuário/senha não foi configurada com a palavra-chave do privilégio 15 no servidor SCP.
+
+R2# copy flash0:R2backup.cfg scp: 
+Address or name of remote host []? 10.1.1.1 
+Destination username [R2]? Bob 
+Destination filename [R2backup.cfg]?  
+Writing R2backup.cfg  
+Password: <cisco12345> 
+! 
+1381 bytes copied in 8.596 secs (161 bytes/sec) 
+ 
+R2#
+No R1, você pode inserir o debug ip scp para assistir a transferência prosseguir, como mostrado no exemplo a seguir. O problema de autenticação mais comum é uma combinação incorreta de nome de usuário/senha. Há igualmente uma falha da autenticação se a combinação do nome de usuário/senha não foi configurada com privilege 15 keyword no servidor SCP.
+
+R1# debug ip scp
+Incoming SCP debugging is on 
+R1# 
+*Feb 18 20:37:15.363: SCP: [22 -> 10.1.1.2:61656] send  *Feb 18 20:37:15.367: SCP: [22 <- 10.1.1.2:61656] recv C0644 1381 R2backup.cfg *Feb 18 20:37:15.367: SCP: [22 -> 10.1.1.2:61656] send
+
+6.1.5
+Recuperando uma Senha de Roteador
+Se um roteador é comprometido ou precisa ser recuperado de uma senha configurada incorretamente, um administrador deve usar procedimentos de recuperação de senha, como aqueles mostrados nas etapas abaixo. Por razões de segurança, a recuperação de senha exige que o administrador tenha acesso físico ao roteador através de um cabo de console. Dependendo do dispositivo, o procedimento detalhado para recuperação de senha varia.
+
+Etapa 1. Conecte à porta do console.
+
+Etapa 2. Use o comando show version para exibir a definição do registro de configuração e documentar o valor (por exemplo, 0x2102).
+
+Etapa 3. Ciclo de energia o roteador.
+
+Etapa 4. Emita a sequência de interrupção (por exemplo, CTRL-BREAK) para entrar no modo ROMMON.
+
+Etapa 5. Altere o registro de configuração padrão com o comando confreg 0x2142.
+
+Etapa 6. Reinicialize o roteador usando o comando reset no modo ROMMON.
+
+Etapa 7. Pressione Ctrl-C para pular o procedimento de configuração inicial.
+
+Etapa 8. Entre no modo EXEC privilegiado.
+
+Etapa 9. Copie a configuração de inicialização para a configuração em execução usando o comando copy startup-config running-config.
+
+Etapa 10. Verifique a configuração.
+
+Etapa 11. Altere a senha secreta ativa.
+
+Etapa 12. Habilite todas as interfaces usando o comando no shutdown.
+
+Etapa 13. Retorne a configuração do registro de configuração para a configuração original que foi documentada na Etapa 2 com o comando de configuração global config-register. Na próxima reinicialização, o roteador usará essas configurações e carregará o novo arquivo de configuração de inicialização que contém a senha alterada.
+
+Etapa 14. Salve as alterações de configuração.
+
+
+6.1.6
+Recuperação de senha
+Se alguém obteve acesso físico a um roteador, poderia potencialmente ganhar o controle desse dispositivo através do procedimento de recuperação de senha. Este procedimento, se executado corretamente, deixa a configuração do roteador intacta. Se o atacante não fizer alterações importantes, esse tipo de ataque é difícil de detectar. Um invasor pode usar este método de ataque para descobrir a configuração do roteador e outras informações pertinentes sobre a rede, tais como fluxos de tráfego e restrições de controle de acesso.
+
+Um administrador pode mitigar essa violação potencial de segurança usando o comando do modo de configuração global no service password-recovery. Este comando é um comando oculto do Cisco IOS e não tem nenhum argumento ou palavras-chave. Se um roteador for configurado com o comando no service password-recovery, todo o acesso ao modo ROMmon será desabilitado.
+
+Quando o comando no service password-recovery é inserido, uma mensagem de advertência é exibida e deve ser confirmada antes que a característica esteja permitida, segundo as indicações da figura.
+
+R1(config)# no service password-recovery
+WARNING: 
+Executing this command will disable password recovery    
+mechanism. 
+Do not execute this command without another plan for  
+password recovery. 
+Are you sure you want to continue? [yes/no]: yes 
+R1(config)#
+Quando configurado, o comando show running-config exibe uma instrução no service password-recovery, conforme mostrado aqui.
+
+R1# show running-config 
+Building configuration... 
+
+Current configuration : 836 bytes 
+! 
+version 12.4 
+service timestamps debug datetime msec 
+service timestamps log datetime msec 
+service password-encryption 
+no service password-recovery
+Como mostrado abaixo, quando o roteador é inicializado, a sequência de inicialização inicial exibe uma mensagem informando que a FUNCIONALIDADE DE RECUPERAÇÃO DE SENHA ESTÁ DESATIVADA.
+
+System Bootstrap, Version 12.4(13r)T, RELEASE SOFTWARE (fc1) 
+Technical Support: http://www.cisco.com/techsupport 
+Copyright (c) 2006 by cisco Systems, Inc. 
+PLD version 0x10 
+GIO ASIC version 0x127 
+c1841 platform with 131072 Kbytes of main memory 
+Main memory is configured to 64 bit mode with parity disabled 
+ 
+PASSWORD RECOVERY FUNCTIONALITY IS DISABLED
+program load complete, entry point: 0x8000f000, size:0xcb80
+Para recuperar um dispositivo após o comando no service password-recovery ser inserido, inicie a sequência de quebra dentro de cinco segundos após a descompressão da imagem durante a inicialização. Você será solicitado a confirmar a ação chave de quebra. Depois que a ação é confirmada, a configuração de inicialização é completamente apagada, o procedimento de recuperação de senha está habilitado e o roteador inicializa com a configuração padrão de fábrica. Se você não confirmar a ação de quebra, o roteador inicializa normalmente com o comando no service password-recovery.
+
+CUIDADO: Se a memória flash do roteador não contiver uma imagem válida do Cisco IOS devido à corrupção ou à exclusão, o comando ROMmon xmodem não pode ser usado para carregar uma imagem flash nova. Para reparar o roteador, um administrador deve obter uma imagem nova do Cisco IOS em um SIMM flash ou em uma placa PCMCIA. No entanto, se um administrador tiver acesso ao ROMmon, eles podem restaurar um arquivo IOS à memória flash usando um servidor TFTP. Refira o Cisco.com para obter mais informações sobre imagens instantâneas de backup.
+
+
+Bloqueando um roteador usando o AutoSecure
+
+6.2.1
+Protocolos de Descoberta CDP e LLDP
+Os roteadores Cisco são distribuídos inicialmente com muitos serviços que são permitidos à revelia. Isso é feito por conveniência e para simplificar o processo de configuração necessário para obter o dispositivo operacional. Contudo, alguns destes serviços podem tornar o dispositivo vulnerável ao ataque se a segurança não é permitida. Os administradores podem igualmente permitir serviços nos roteadores Cisco que podem expor o dispositivo ao risco significativo. Ambas as situações devem ser levadas em consideração ao proteger a rede.
+
+O Cisco Discovery Protocol (CDP) é um exemplo de um serviço que seja permitido à revelia nos roteadores Cisco. O protocolo de descoberta da camada de link (LLDP) é um padrão aberto que possa ser permitido em dispositivos Cisco, assim como em outros dispositivos do fornecedor que apoiam LLDP.
+
+A configuração e a verificação LLDP são similares ao CDP. Na figura, R1 e S1 são ambos configurados com LLDP, usando o comando de configuração global lldp run. Ambos os dispositivos estão executando o CDP à revelia. A saída para show cdp neighbors detail e show lldp neighbors detail revelará o endereço, a plataforma e os detalhes do sistema operacional de um dispositivo.
+
+R1(config)# lldp run
+R1(config)# end
+R1# show cdp neighbors detail
+-------------------------
+Device ID: S1
+Entry address(es):
+  IP address: 192.168.1.254
+Platform: cisco WS-C2960-24TT-L, Capabilities: Switch IGMP
+Interface: GigabitEthernet0/1, Port ID (outgoing port): FastEthernet0/5
+Holdtime : 164 sec
+
+Version :
+Cisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE7, 
+RELEASE SOFTWARE (fc1)           
+<output omitted>
+
+R1# show lldp neighbors detail  
+------------------------------------------------ 
+Local Intf: Gi0/1 
+Chassis id: 0022.9121.0380 
+Port id: Fa0/5 
+Port Description: FastEthernet0/5 
+System Name: S1 
+ 
+System Description:  
+Cisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE7, 
+RELEASE SOFTWARE (fc1)
+<output omitted>
+Infelizmente, os atacantes não precisam de ter dispositivos habilitados para CDP ou LLDP-habilitados para recolher esta informação confidencial. O software prontamente disponível, tal como o monitor de CDP de Cisco mostrado na figura, pode ser transferido para obter a informação. A intenção do CDP e do LLDP é facilitar para que os administradores descubram e pesquisem defeitos outros dispositivos na rede. No entanto, devido às implicações de segurança, esses protocolos de descoberta devem ser usados com cautela. Embora seja uma ferramenta extremamente útil, não deve estar em todos os lugares da rede. Os dispositivos de borda são um exemplo de um dispositivo que deve ter esse recurso desabilitado.
+
+
+6.2.2
+Configurações para Protocolos e Serviços
+Os invasores escolhem serviços e protocolos que tornam a rede mais vulnerável à exploração maliciosa.
+
+Muitos desses recursos devem ser desativados ou restritos em suas capacidades com base nas necessidades de segurança de uma organização. Esses recursos variam de protocolos de descoberta de rede, como CDP e LLDP, a protocolos disponíveis globalmente, como ICMP e outras ferramentas de varredura.
+
+Algumas das configurações padrão no Cisco IOS Software estão lá por razões históricas. Eles eram configurações padrão lógicas no momento em que o software foi escrito originalmente. Outras configurações padrão fazem sentido para a maioria dos sistemas, mas podem criar exposições de segurança se forem usadas em dispositivos que fazem parte de uma defesa de perímetro de rede. Ainda outros padrões são exigidos por padrões, mas nem sempre são desejáveis do ponto de vista da segurança.
+
+A tabela resume o recurso e as configurações padrão para protocolos e serviços.
+
+Recurso
+
+Padrão
+
+Protocolo de identificação Cisco (CDP – Cisco Discovery Protocol)
+
+Habilitado
+
+Link Layer Discovery Protocol (LLDP)
+
+Desabilitado
+
+Carregamento automático de configuração
+
+Desabilitado
+
+⁪servidor FTP
+
+Desabilitado
+
+servidor TFTP
+
+Desabilitado
+
+Serviço de Protocolo de Tempo de Rede (NTP)
+
+Desabilitado
+
+Serviço de montador/desmontador de pacotes (PAD)
+
+Habilitado
+
+Serviços de Espelhamento TCP e Protocolo de Datagrama do Usuário (UDP)
+
+Ativado nas versões 11.3 e posterior
+
+Serviço do protocolo de operação da manutenção (MOP)
+
+Ativado na maioria das interfaces Ethernet
+
+Protocolo de Gerenciamento Simples de Rede (SNMP)
+
+Habilitado
+
+Configuração e monitoramento HTTP ou HTTPS
+
+O ajuste é dependente do dispositivo Cisco.
+
+Domain Name System (DNS)
+
+Habilitado
+
+redirecionamentos de Protocolo de Mensagem de Controle da Internet (ICMP)
+
+Habilitado
+
+Roteamento de origem IP
+
+Habilitado
+
+Serviço de Figer
+
+Habilitado
+
+Notificações inacessíveis ICMP
+
+Habilitado
+
+Resposta da máscara ICMP
+
+Desabilitado
+
+Serviço de identificação de IP
+
+Habilitado
+
+TCP Keepalives
+
+Desabilitado
+
+ARP Gratuito (GARP)
+
+Habilitado
+
+ARP de proxy
+
+Habilitado
+
+A tabela abaixo mostra as configurações de segurança recomendadas para protocolos e serviços.
+
+Existem várias práticas importantes disponíveis para ajudar a garantir que um dispositivo esteja seguro:
+
+Desabilite serviços e interfaces desnecessários.
+Desabilite e restringe serviços de gerenciamento geralmente configurados, como o SNMP.
+Desabilite pontas de prova e varreduras, como ICMP. Garantir a segurança do acesso ao terminal.
+Desabilite os protocolos de resolução de endereços (ARPs) gratuitos e proxy.
+Desative as transmissões direcionadas por IP.
+Recurso
+
+Recomendação
+
+Protocolo de identificação Cisco (CDP – Cisco Discovery Protocol)
+
+Deve ser desabilitado globalmente ou em uma base da por-relação se não for exigido.
+
+Link Layer Discovery Protocol (LLDP)
+
+Deve ser desativado globalmente ou em uma base por interface, se não for necessário.
+
+Autloading de configuração
+
+Deve permanecer desabilitado quando não estiver em uso pelo roteador.
+
+⁪servidor FTP
+
+Deve ser desativado quando não for necessário.
+
+servidor TFTP
+
+Deve ser desativado quando não for necessário.
+
+Serviço de Protocolo de Tempo de Rede (NTP)
+
+Deve permanecer desativado quando não for necessário.
+
+Serviço de Packet assembler/disassembler (PAD)
+
+Deve ser explicitamente desativado quando não estiver em uso.
+
+Serviços de Espelhamento TCP e Protocolo de Datagrama do Usuário (UDP)
+
+Desative este serviço explicitamente.
+
+Serviço de Protocolo de Operação de Manutenção (MOP)
+
+Deve ser explicitamente desativado quando não estiver em uso.
+
+Protocolo de Gerenciamento Simples de Rede (SNMP)
+
+Desative este serviço quando não for necessário.
+
+Configuração e Monitoramento HTTP ou HTTPS
+
+Desabilite o serviço se não for necessário. Se este serviço for exigido, restringir o acesso ao serviço HTTP ou HTTPS do roteador usando listas de controle de acesso (ACLs).
+
+Domain Name System (DNS)
+
+Desativar quando não é necessário. Se o serviço de pesquisa de DNS for necessário, assegure-se de que você defina o endereço do servidor DNS explicitamente.
+
+redirecionamentos de Protocolo de Mensagem de Controle da Internet (ICMP)
+
+Desativar quando não é necessário.
+
+Roteamento de Origem IP
+
+Desative este serviço quando não for necessário.
+
+Serviço de Finger
+
+Desative este serviço quando não for necessário.
+
+Notificações inacessíveis ICMP
+
+Desabilite em interfaces para redes não confiáveis.
+
+Resposta da máscara ICMP
+
+Desativar em interfaces em redes não confiáveis.
+
+Serviço de identificação IP
+
+O serviço deve ser explicitamente desativado.
+
+TCP Keepalives
+
+Deve ser habilitado globalmente para gerenciar conexões TCP e impedir determinados ataques de negação de serviço (DoS). O serviço é permitido nos Cisco IOS Software Release antes do Cisco IOS Release 12.0 e está desabilitado no Cisco IOS Release 12.0 e Mais Recente. Desative este serviço quando não for necessário.
+
+ARP Gratuito (GARP)
+
+Desabilite ARPs gratuitos em cada interface de roteador, a menos que este serviço seja necessário.
+
+ARP de proxy
+
+Desabilite este serviço em cada relação a menos que o roteador esteja sendo usado como uma ponte LAN.
+
+
+6.2.3
+AutoSecure Cisco
+Lançado na versão 12.3 do IOS, o Cisco AutoSecure é uma característica que seja iniciada do CLI e execute um script. AutoSecure primeiro faz recomendações para corrigir vulnerabilidades de segurança e, em seguida, modifica a configuração de segurança do roteador, como mostrado na figura.
+
+O AutoSecure pode bloquear as funções do plano de gerenciamento e os serviços e funções do plano de encaminhamento de um roteador. Existem vários serviços e funções de plano de gestão:
+
+Bootp seguro, CDP, FTP, TFTP, PAD, UDP e TCP pequenos servidores, MOP, ICMP (redirecionamentos, mask-replies), roteamento de fonte IP, Finger, criptografia de senha, keepalives TCP, ARP gratuito, proxy ARP e transmissão direcionada
+Notificação legal usando um banner
+Senha segura e funções de login
+NTP seguro
+Acesso seguro ao SSH
+Serviços de interceptação TCP
+Há três serviços e funções de plano de encaminhamento que o AutoSecure permite:
+
+Cisco Express Forwarding (CEF)
+Filtragem de tráfego com ACLs
+Inspeção de firewall do Cisco IOS para protocolos comuns
+AutoSecure é usado frequentemente no campo para fornecer uma política de segurança da linha de base em um roteador novo. Os recursos podem então ser alterados para dar suporte à política de segurança da organização.
+
+R1# auto secure  
+  --- AutoSecure Configuration --- 
+ 
+*** AutoSecure configuration enhances the security 
+ of the router but it will not make router 
+ absolutely secure from all security attacks *** 
+ 
+All the configuration done as part of AutoSecure 
+will be shown here. For more details of why and 
+how this configuration is useful, and any possible 
+side effects, please refer to Cisco documentation of 
+AutoSecure. 
+ 
+At any prompt you may enter '?' for help. 
+Use ctrl-c to abort this session at any prompt. 
+ 
+Gathering information about the router for 
+AutoSecure 
+ 
+Is this router connected to internet? [no]:yes
+
+6.2.4
+Usando o recurso Cisco AutoSecure
+Use o comando auto secure permitir a instalação da característica AutoSecure Cisco. Esta configuração pode ser interativa ou não interativa. A figura mostra a sintaxe do comando para o comando auto secure.
+
+ Router# auto secure {no-interact | full} [forwarding | management] [ntp | login | ssh | firewall | top-intercept]
+Aqui estão os parâmetros de comando.
+
+Nota: As opções podem variar de acordo com a plataforma.
+
+R1# auto secure ? 
+  forwarding   Secure Forwarding Plane
+  management   Secure Management Plane
+  no-interact  Non-interactive session of AutoSecure
+  <cr> 
+ 
+R1#
+No modo interativo, o roteador solicita opções para habilitar e desativar serviços e outros recursos de segurança. Este é o modo padrão, mas também pode ser configurado usando o comando auto secure full.
+
+O modo não interativo é configurado com o comando auto secure no-interact. Isto executará automaticamente a característica AutoSecure de Cisco com as configurações padrão recomendadas da Cisco. O comando auto secure também pode ser inserido com palavras-chave para configurar componentes específicos, como o plano de gerenciamento (management palavra-chave) e o plano de encaminhamento (forwarding palavra-chave).
+
+Parâmetros Opcionais
+
+Descrição
+
+no-interact
+O usuário não será solicitado a nenhuma configuração interativa. Nenhum parâmetro de diálogo interativo será configurado, incluindo nomes de usuário ou senhas.
+
+full
+O usuário será solicitado para todas as perguntas interativas. Essa é a configuração padrão.
+
+forwarding
+Apenas o plano de encaminhamento será protegido.
+
+management
+Apenas o plano de gestão será garantido.
+
+ntp
+Especifica a configuração do recurso NTP no AutoSecure CLI.
+
+login
+Especifica a configuração do recurso de login no AutoSecure CLI.
+
+ssh
+Especifica a configuração do recurso SSH no AutoSecure CLI.
+
+firewall
+Especifica a configuração do recurso de firewall no AutoSecure CLI.
+
+tcp-intercept
+Especifica a configuração do recurso de interceptação de TCP no AutoSecure CLI.
+
+
+6.2.5
+Usando o comando auto secure
+Quando o comando auto secure é iniciado, um assistente CLI orienta o administrador pela configuração do dispositivo. A entrada do usuário é necessária.
+
+Clique abaixo para saber mais sobre as etapas do assistente da CLI.
+
+
+1
+
+2
+
+3
+
+4
+
+5
+
+6
+
+7
+O comando auto secure é inserido. O roteador exibe a mensagem de boas-vindas do assistente de configuração AutoSecure, como mostrado.
+
+R1# auto secure 
+--- AutoSecure Configuration --- 
+ 
+*** AutoSecure configuration enhances the security of the router, but it will not make it  
+absolutely resistant to all security attacks *** 
+ 
+AutoSecure will modify the configuration of your device. All configuration changes will be 
+shown. For a detailed explanation of how the configuration changes enhance security and any 
+possible side effects, please refer to Cisco.com for Autosecure documentation.  
+At any prompt you may enter &apos;?&apos; for help.  
+Use ctrl-c to abort this session at any prompt. 
+ 
+Gathering information about the router for AutoSecure 
+ 
+<continued>
+Quando o assistente estiver concluído, uma configuração em execução exibe todas as configurações e alterações.
+
+Nota: O AutoSecure deve ser usado quando um roteador está sendo configurado inicialmente. Não é recomendado em roteadores de produção.
