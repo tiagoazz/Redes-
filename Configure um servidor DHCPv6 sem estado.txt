@@ -1,0 +1,69 @@
+Configure um servidor DHCPv6 sem estado
+Etapa 1. Ative o roteamento IPv6.
+
+Oipv6 unicast-routing comando é necessário para ativar o roteamento IPv6. Embora não seja necessário que o roteador seja um servidor DHCPv6 sem estado, é necessário que o roteador origine mensagens de RA ICMPv6.
+
+R1(config)# ipv6 unicast-routing
+R1(config)# 
+
+Etapa 2. Defina um nome de pool DHCPv6.
+
+Crie o pool DHCPv6 usando o comando ipv6 dhcp pool POOL-NAME global config. Isso entra no modo de subconfiguração do pool DHCPv6 conforme identificado peloRouter(config-dhcpv6)#prompt.
+
+Note: O nome do pool não precisa ser maiúscula. No entanto, usar um nome em maiúsculas facilita a visualização em uma configuração.
+
+R1(config)# ipv6 dhcp pool IPV6-STATELESS
+R1(config-dhcpv6)#
+
+Etapa 3. Configure o pool DHCPv6.
+
+O R1 será configurado para fornecer informações DHCP adicionais, incluindo endereço do servidor DNS e nome de domínio, conforme mostrado na saída do comando.
+
+R1(config-dhcpv6)# dns-server 2001:db8:acad:1::254
+R1(config-dhcpv6)# domain-name example.com
+R1(config-dhcpv6)# exit
+R1(config)#
+
+Etapa 4. Vincular o pool DHCPv6 a uma interface.
+
+O pool DHCPv6 deve ser vinculado à interface usando o comando ipv6 dhcp server POOL-NAME interface config, conforme mostrado na saída.
+
+O roteador responde às solicitações do DHCPv6 stateless nessa interface com as informações contidas no pool. A flag O deve ser alterada de 0 a 1 usando o comando de interface ipv6 nd other-config-flag. As mensagens de RA enviadas nesta interface indicam que informações adicionais estão disponíveis de um servidor DHCPv6 stateless. O sinalizador A é 1 por padrão, dizendo aos clientes para usar o SLAAC para criar seu próprio GUA.
+
+R1(config)# interface GigabitEthernet0/0/1
+R1(config-if)# description Link to LAN
+R1(config-if)# ipv6 address fe80::1 link-local
+R1(config-if)# ipv6 address 2001:db8:acad:1::1/64
+R1(config-if)# ipv6 nd other-config-flag
+R1(config-if)# ipv6 dhcp server IPV6-STATELESS
+R1(config-if)# no shut
+R1(config-if)# finalizar
+R1#
+
+
+Etapa 5. Verifique se os hosts receberam informações de endereçamento IPv6.
+
+Para verificar DHCP sem estado em um host Windows, use o ipconfig /all comando. A saída de exemplo exibe as configurações em PC1.
+
+Observe na saída que PC1 criou seu IPv6 GUA usando o prefixo 2001:db8:acad:1: :/64. Observe também que o gateway padrão é o endereço local de link IPv6 de R1. Isso confirma que o PC1 derivou sua configuração IPv6 do RA de R1.
+
+A saída destacada confirma que o PC1 aprendeu as informações de nome de domínio e endereço de servidor DNS do servidor DHCPv6 sem estado.
+
+C:\PC1> ipconfig /all
+Configuração do IP do Windows
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix . : example.com
+   Descrição . . . . . . . . . . . : Intel(R) 82574L Gigabit Network Connection
+   Endereço Físico. . . . . . . . . : 00-05-9A-3C-7A-00
+   DHCP Enabled. . . . . . . . . . . : Yes
+   Autoconfiguration Enabled . . . . : Yes
+   IPv6 Address. . . . . . . . . . . : 2001:db8:acad:1:1dd:a2ea:66e7 Preferred)
+   Link-local IPv6 Address . . . . . : fe80::fb:1d54:839f:f595%21(Preferred)
+   IPv4 Address. . . . . . . . . . . : 169.254.102.23 (Preferred)
+   Máscara de Sub-Rede . . . . . . . . . . . : 255.255.0.0
+   Gateway Padrão . . . . . . . . . : fe80::1%6
+   DHCPv6 IAID . . . . . . . . . . . : 318768538
+   DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-21-F3-76-75-54-E1-AD-DE-DA-9A
+   Servidores DNS . . . . . . . . . . . : 2001:db8:acad:1::1
+   NetBIOS over Tcpip. . . . . . . . : Habilitado
+C:\PC1>
