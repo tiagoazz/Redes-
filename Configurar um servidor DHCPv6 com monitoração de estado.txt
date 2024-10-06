@@ -1,0 +1,87 @@
+Configurar um servidor DHCPv6 com monitoração de estado
+
+Existem cinco etapas para configurar e verificar um roteador como um servidor DHCPv6 sem estado:
+
+Etapa 1. Ative o roteamento IPv6.
+
+Etapa 2. Defina um nome de pool DHCPv6.
+
+Etapa 3. Configure o pool DHCPv6.
+
+Etapa 4. Vincular o pool DHCPv6 a uma interface.
+
+Etapa 5. Verifique se os hosts receberam informações de endereçamento IPv6.
+
+-----------------------------------------------------------------------------------
+
+Etapa 1. Ative o roteamento IPv6.
+
+O ipv6 unicast-routing comando é necessário para ativar o roteamento IPv6.
+
+R1(config)# ipv6 unicast-routing
+R1(config)# 
+
+Etapa 2. Define a DHCPv6 pool name.
+
+Crie o pool DHCPv6 usando o comando ipv6 dhcp pool POOL-NAME global config.
+
+R1(config)# ipv6 dhcp pool IPV6-STATEFUL
+R1(config-dhcpv6)#
+
+Etapa 3. Configure the DHCPv6 pool.
+
+O R1 será configurado para fornecer endereçamento IPv6, endereço do servidor DNS e nome de domínio, conforme mostrado na saída do comando. Com o DHCPv6 stateful, todo o endereçamento e outros parâmetros de configuração devem ser atribuídos por servidores DHCPv6. O address prefix comando é usado para indicar o conjunto de endereços a serem alocados pelo servidor. Outras informações fornecidas por servidores DHCPv6 stateful normalmente incluem o endereço de servidor DNS e o nome de domínio, como mostrado na saída.
+
+Observação: Este exemplo está configurando o servidor DNS para o servidor DNS público do Google.
+
+R1(config-dhcpv6)# address prefix 2001:db8:acad:1::/64
+R1(config-dhcpv6)# dns-server 2001:4860:4860::8888
+R1(config-dhcpv6)# domain-name example.com
+R1(config-dhcpv6)#
+
+Etapa 4. Bind the DHCPv6 pool to an interface.
+
+O exemplo mostra a configuração completa da interface GigabitEthernet 0/0/1 em R1.
+
+O pool DHCPv6 deve ser vinculado à interface usando o comando ipv6 dhcp server POOL-NAME interface config.
+
+The M flag is manually changed from 0 to 1 using the interface command ipv6 nd managed-config-flag.
+The A flag is manually changed from 1 to 0 using the interface command ipv6 nd prefixo padrão no-autoconfig. O sinalizador A pode ser deixado em 1, mas alguns sistemas operacionais cliente, como o Windows, criarão um GUA usando SLAAC e obterão um GUA do servidor DHCPv6 com estado. Definir o sinalizador A como 0 indica ao cliente para não usar SLAAC para criar um GUA.
+The ipv6 dhcp server O comando vincula o pool DHCPv6 à interface. R1 agora responderá com as informações contidas no pool quando receber solicitações DHCPv6 com estado nesta interface.
+Note: You can use the no ipv6 nd managed-config-flag to set the M flag back to its default of 0. The no ipv6 nd prefix default no-autoconfig comando define o sinalizador A de volta seu padrão de 1.
+
+R1(config)# interface GigabitEthernet0/0/1
+R1(config-if)# description Link to LAN
+R1(config-if)# ipv6 address fe80::1 link-local
+R1(config-if)# ipv6 address 2001:db8:acad:1::1/64
+R1(config-if)# ipv6 nd managed-config-flag
+R1(config-if)# ipv6 nd prefix default no-autoconfig
+R1(config-if)# ipv6 dhcp server IPV6-STATEFUL
+R1(config-if)# no shut
+R1(config-if)# finalizar
+R1#
+
+Passo 5. Verify hosts received IPv6 addressing information.
+
+Para verificar em um host Windows, use o ipconfig /all comando para verificar o método de configuração DHCP sem estado. A saída exibe as configurações em PC1. A saída destacada mostra que PC1 recebeu seu IPv6 GUA de um servidor DHCPv6 com estado.
+
+C:\PC1> ipconfig /all
+Configuração do IP do Windows
+Ethernet adapter Ethernet0:
+   Connection-specific DNS Suffix . : example.com
+   Descrição . . . . . . . . . . . : IntelI 82574L Gigabit Network Connection
+   Endereço Físico. . . . . . . . . : 00-05-9A-3C-7A-00
+   DHCP Enabled. . . . . . . . . . . : Yes
+   Autoconfiguration Enabled . . . . : Yes
+   IPv6 Address. . . . . . . . . . . : 2001:db8:acad:1a43c:fd28:9d79:9e42 (Preferred)
+   Lease Obtained. . . . . . . . . . : Saturday, September 27, 2019, 10:45:30 AM
+   Lease Expires . . . . . . . . . . : Monday, September 29, 2019 10:05:04 AM
+   Link-local IPv6 Address . . . . . : fe80::192f:6fbc:9db:b749%6(Preferred)
+   Endereço IPv4 de configuração automática. . : 169.254.102.73 (Preferred)
+   Máscara de Sub-Rede . . . . . . . . . . . : 255.255.0.0
+   Gateway Padrão . . . . . . . . . : fe80::1%6
+   DHCPv6 IAID . . . . . . . . . . . : 318768538
+   DHCPv6 Client DUID. . . . . . . . : 00-01-00-01-21-F3-76-75-54-E1-AD-DE-DA-9A
+   Servidores DNS . . . . . . . . . . . : 2001:4860:4860። 8888
+   NetBIOS over Tcpip. . . . . . . . : Habilitado
+C:\PC1>
