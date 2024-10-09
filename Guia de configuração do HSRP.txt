@@ -1,0 +1,42 @@
+Guia de configuração do HSRP
+
+ rastreador de pacotes, você aprenderá como configurar o protocolo HSRP (Hot Standby Router Protocol) para fornecer dispositivos de gateway padrão redundantes para hosts em LANs. Depois de configurar o HSRP, você testará a configuração para verificar se os hosts são capazes de usar o gateway padrão redundante se o dispositivo gateway atual ficar indisponível.
+
+Configure um roteador HSRP ativo.
+Configure um roteador de espera HSRP.
+Verifique a operação HSRP.
+Scripts de resposta
+Roteador R1
+enable
+config t
+interface g0/1
+ standby version 2
+ standby 1 ip 192.168.1.254
+ standby 1 priority 150
+ standby 1 preempt
+end
+Roteador R3
+enable
+config t
+ interface g0/0
+ standby version 2
+ standby 1 ip 192.168.1.254
+end
+
+
+swite S1
+enable
+config t
+ip default-gateway 192.168.1.254
+end
+
+
+switw S3
+enable
+config t
+ip default-gateway 192.168.1.254
+end
+PC-A e PC-B
+Altere o gateway padrão para 192.168.1.254
+end
+
