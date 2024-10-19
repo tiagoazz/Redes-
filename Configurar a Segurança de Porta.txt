@@ -1,0 +1,38 @@
+Parte 1: Configurar a Segurança de Porta
+Acessar as interfaces Fast Ethernet 0/1 e 0/2 no switch S1 e ativar a segurança de porta:
+
+
+S1(config)# interface range f0/1 - 2
+S1(config-if-range)# switchport port-security
+Definir o máximo de dispositivos permitidos por porta (1 dispositivo):
+
+
+S1(config-if-range)# switchport port-security maximum 1
+Configurar o endereço MAC para ser aprendido dinamicamente e adicionado à configuração:
+
+
+S1(config-if-range)# switchport port-security mac-address sticky
+Definir o modo de violação para "restrict" (não desativar a porta, mas descartar pacotes e gerar notificação):
+
+
+S1(config-if-range)# switchport port-security violation restrict
+Desativar todas as portas não utilizadas:
+
+
+S1(config-if-range)# interface range f0/3 - 24, g0/1 - 2
+S1(config-if-range)# shutdown
+Parte 2: Verificar a Segurança de Porta
+Exibir a configuração de execução e verificar se os endereços MAC dos dispositivos foram adicionados:
+
+
+S1# show run | begin interface
+Exibir informações de configuração de segurança de porta:
+
+
+S1# show port-security
+S1# show port-security address
+Exibir violações de segurança na interface Fast Ethernet específica:
+
+
+S1# show port-security interface f0/2
+Esses comandos configuram a segurança e permitem a verificação das portas no switch.
