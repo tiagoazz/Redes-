@@ -1,0 +1,67 @@
+mitigar ataques de salto de VLAN (VLAN Hopping), é importante configurar os switches corretamente. Isso garante que os dispositivos não sejam capazes de explorar vulnerabilidades que poderiam permitir a passagem não autorizada de tráfego entre VLANs. Vamos aos códigos e explicações de cada etapa para Cisco Switches:
+
+1. Desativar o Trunking Automático (DTP)
+O Dynamic Trunking Protocol (DTP) é usado para negociar trunks automaticamente entre switches. Desativar DTP em portas que não precisam de trunks impede que um invasor configure um trunk malicioso.
+
+
+Switch(config)# interface range fa0/1 - 24
+Switch(config-if-range)# switchport mode access
+Switch(config-if-range)# switchport nonegotiate
+Explicação:
+interface range fa0/1 - 24: Seleciona as interfaces do switch.
+switchport mode access: Configura as portas como portas de acesso, impedindo a formação de trunks.
+switchport nonegotiate: Desativa o DTP para evitar que as portas tentem negociar trunks.
+2. Configurar Portas como Access e Atribuir a VLAN Correta
+Todas as portas que não precisam ser trunks devem ser configuradas como portas de acesso e atribuídas a VLANs específicas.
+
+
+Switch(config)# interface range fa0/1 - 24
+Switch(config-if-range)# switchport mode access
+Switch(config-if-range)# switchport access vlan 10
+Explicação:
+switchport mode access: Configura as portas como portas de acesso.
+switchport access vlan 10: Atribui as portas à VLAN 10 para que não se conectem indevidamente a outras VLANs.
+3. Configurar Native VLANs Diferentes para Trunks
+O ataque conhecido como "Double-Tagging" explora o uso de VLANs nativas. Configurar VLANs nativas específicas nos trunks ajuda a mitigar este ataque.
+
+
+Switch(config)# interface fa0/24
+Switch(config-if)# switchport trunk encapsulation dot1q
+Switch(config-if)# switchport mode trunk
+Switch(config-if)# switchport trunk native vlan 999
+Explicação:
+switchport trunk encapsulation dot1q: Define o encapsulamento para 802.1Q.
+switchport mode trunk: Configura a interface como trunk.
+switchport trunk native vlan 999: Define a VLAN nativa para algo que não seja a VLAN 1 (usualmente padrão), minimizando os riscos de ataques de "double-tagging".
+4. Aplicar VLANs Exclusivas para Portas Trunk e Não Usar VLAN 1
+A VLAN 1 é a VLAN padrão e é muito vulnerável. É uma prática recomendada usar VLANs exclusivas para os trunks e não utilizar a VLAN 1.
+
+
+Switch(config)# interface fa0/24
+Switch(config-if)# switchport trunk allowed vlan 10,20,30
+Switch(config-if)# switchport trunk native vlan 999
+Explicação:
+switchport trunk allowed vlan 10,20,30: Especifica quais VLANs estão permitidas neste trunk, reduzindo o tráfego desnecessário.
+switchport trunk native vlan 999: Configura uma VLAN específica como nativa, que não é a VLAN 1.
+5. Desativar Protocolos de Encaminhamento Inseguro como CDP
+O Cisco Discovery Protocol (CDP) pode expor informações desnecessárias sobre a rede. Desative-o em portas onde não é necessário.
+
+
+Switch(config)# interface range fa0/1 - 24
+Switch(config-if-range)# no cdp enable
+Explicação:
+no cdp enable: Desativa o CDP para evitar exposição de informações que podem ser usadas em ataques.
+6. Habilitar Port Security para Limitar Endereços MAC
+Implementar segurança nas portas para limitar o número de dispositivos conectados às portas.
+
+
+Switch(config)# interface range fa0/1 - 24
+Switch(config-if-range)# switchport port-security
+Switch(config-if-range)# switchport port-security maximum 1
+Switch(config-if-range)# switchport port-security violation restrict
+Switch(config-if-range)# switchport port-security mac-address sticky
+Explicação:
+switchport port-security: Habilita a segurança na porta.
+switchport port-security maximum 1: Permite apenas um endereço MAC por porta.
+switchport port-security violation restrict: Restringe a porta se uma violação ocorrer.
+switchport port-security mac-address sticky: Aprende e grava o endereço MAC na configuração.
