@@ -1,59 +1,41 @@
-
-# Hello, I'm Tiago Azevedo
+Hello, I'm Tiago Azevedo
 <a href="https://www.linkedin.com/in/tiago-azevedo-57aa33160/"><img src="https://img.shields.io/badge/-LinkedIn-0072b1?&style=for-the-badge&logo=linkedin&logoColor=white" /></a>
 
+I am a network technician and student passionate about technology, focused on helping professionals and students in networking with practical scripts and automation.
 
-I am a recent graduate with a profound interest in technology and a dedication to solving complex problems.
+Objective
+This repository aims to provide ready-made scripts and configurations for network professionals and students, focusing on Cisco equipment. It is designed to simplify day-to-day tasks, automate configurations, and serve as a learning tool for anyone interested in networking.
 
-## Objective
+Scripts Available
+Task	Script Name
+Basic Switch Configuration	SwitchConfig.sh
+VLAN and Trunk Configuration	VLAN_Trunk.sh
+Port Security Setup	PortSecurity.sh
+DHCP Snooping Configuration	DHCP_Snooping.sh
+Automated Router Setup	RouterAutoConfig.sh
+Tools
+Network Automation
+<div> <img src="https://img.shields.io/badge/-Cisco-1BA0D7?&style=for-the-badge&logo=Cisco&logoColor=white" /> <img src="https://img.shields.io/badge/-Packet_Tracer-217346?&style=for-the-badge&logo=PacketTracer&logoColor=white" /> <img src="https://img.shields.io/badge/-GNS3-0078D7?&style=for-the-badge&logo=GNS3&logoColor=white" /> </div>
+Monitoring and Management
+<div> <img src="https://img.shields.io/badge/-Wireshark-1679A7?&style=for-the-badge&logo=Wireshark&logoColor=white" /> <img src="https://img.shields.io/badge/-NetFlow_Analyzer-DA291C?&style=for-the-badge&logoColor=white" /> <img src="https://img.shields.io/badge/-Nagios-8B0000?&style=for-the-badge&logo=Nagios&logoColor=white" /> </div>
+Skills
+Skill	Associated Scripts
+VLAN Configuration	VLAN_Config.sh
+DHCP Setup and Snooping	DHCP_Snooping.sh
+Port Security and BPDU Guard	PortSecurity.sh
+Router and Switch Automation	RouterAutoConfig.sh
+Projects
+Switch Configuration Toolkit: Automate switch setups with ease.
+VLAN and Trunk Automation: Quickly configure VLANs and trunks for different network scenarios.
+Network Security Implementation: Scripts for implementing port security, DHCP snooping, and BPDU guard.
+🎥 Demonstração em Vídeo
 
+(Adicionar um link para um vídeo ou uma animação mostrando como usar os scripts para configurar switches e roteadores.)
 
-My journey in computer science has led me to develop a passion for cybersecurity, and I am now eager to transition into this field, specifically aiming to join a Security Operations Center (SOC) as a Tier 1 Analyst.
-
-## Skills
-
-
-| Skill                                         | Associated Project         |
-|-----------------------------------------------|----------------------------|
-| SIEM Implementation and Log Analysis          | <a href="https://google.com">Detection Lab</a>|
-| Network Traffic Monitoring and Attack Detection | <a href="https://google.com">Detection Lab</a>|
-| Security Automation with Shuffle SOAR         | SOC Automation Lab|
-| Incident Response Planning and Execution      | SOC Automation Lab|
-| Case Management with TheHive                  | SOC Automation Lab|
-| Scripting and Automation for Threat Mitigation | SOC Automation Lab|
-
-## Tools
-
-### Network
-<div>
-    <img src="https://img.shields.io/badge/-Wireshark-1679A7?&style=for-the-badge&logo=Wireshark&logoColor=white" />
-    <img src="https://img.shields.io/badge/-Suricata-EF3B2D?&style=for-the-badge&logo=Suricata&logoColor=white" />
-    <img src="https://img.shields.io/badge/-Zeek-777BB4?&style=for-the-badge&logo=Zeek&logoColor=white" />
-</div>
-
-### Endpoint
-<div>
-    <img src="https://img.shields.io/badge/-Microsoft_Defender_for_Endpoint-00A4EF?&style=for-the-badge&logo=Microsoft&logoColor=white" />
-    <img src="https://img.shields.io/badge/-Velociraptor-4B275F?&style=for-the-badge&logo=Velociraptor&logoColor=white" />
-</div>
-
-### SIEM
-<div>
-    <img src="https://img.shields.io/badge/-Microsoft_Sentinel-0078D4?&style=for-the-badge&logo=Microsoft&logoColor=white" />
-    <img src="https://img.shields.io/badge/-Splunk-000000?&style=for-the-badge&logo=Splunk&logoColor=white" />
-    <img src="https://img.shields.io/badge/-Elastic-005571?&style=for-the-badge&logo=Elastic&logoColor=white" />
-</div>
-
-## Certifications
-
-<div>
-<img src="https://img.shields.io/badge/-Security%2B-FF0000?&style=for-the-badge&logo=CompTIA&logoColor=white" />
-<img src="https://img.shields.io/badge/-Network%2B-007ACC?&style=for-the-badge&logo=CompTIA&logoColor=white" />
-<img src="https://img.shields.io/badge/-A%2B-4D4D4D?&style=for-the-badge&logo=CompTIA&logoColor=white" />
-<img src="https://img.shields.io/badge/-CDSA-006400?&style=for-the-badge&logoColor=white" />
-<img src="https://img.shields.io/badge/-CCD-000080?&style=for-the-badge&logoColor=white" />
-</div>
-
-## Projects
-- Detection Lab
-- SOC Automation Project
+How to Use the Scripts
+Clone the repository:
+bash
+Copiar código
+git clone https://github.com/tiagoazz/scripts-de-redes.git
+Customize the scripts according to your network environment.
+Apply the scripts on your devices using terminal emulators like Tera Term or PuTTY.
