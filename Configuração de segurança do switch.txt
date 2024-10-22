@@ -1,0 +1,146 @@
+Configuração de segurança do switch
+
+Portas seguras não utilizadas
+Implementar a segurança de porta
+Mitigar ataques de salto de VLAN
+Mitigar ataques de DHCP
+Mitigar ataques de ARP
+Mitigar ataques STP
+Verifique a configuração de segurança do switch
+
+
+-------------
+
+Parte 1: Configurar Dispositivos da Rede
+Configuração do Roteador R1:
+
+configure terminal
+hostname R1
+no ip domain lookup
+ip dhcp excluded-address 192.168.10.1 192.168.10.9
+ip dhcp excluded-address 192.168.10.201 192.168.10.202
+
+ip dhcp pool Students
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ domain-name CCNA2.Lab-11.6.1
+
+interface Loopback0
+ ip address 10.10.1.1 255.255.255.0
+
+interface GigabitEthernet0/0/1
+ description Link para a porta S1
+ ip dhcp relay information trusted
+ ip address 192.168.10.1 255.255.255.0
+ no shutdown
+
+line con 0
+ logging synchronous
+ exec-timeout 0 0
+Explicação:
+
+Configura o hostname e desativa a pesquisa de DNS.
+Exclui endereços IP específicos do pool DHCP.
+Configura um pool DHCP para a rede 192.168.10.0/24.
+Configura a interface loopback com IP 10.10.1.1.
+Configura a interface física conectada ao switch com o IP 192.168.10.1.
+Verificação:
+
+
+show ip interface brief
+Explicação: Verifica o status das interfaces do roteador.
+
+Parte 2: Configurar VLANs nos Switches
+Configuração Básica dos Switches S1 e S2:
+
+enable
+configure terminal
+hostname S1    # ou S2 para o segundo switch
+no ip domain lookup
+
+interface vlan 10
+ ip address 192.168.10.201 255.255.255.0   # Em S1
+ ip address 192.168.10.202 255.255.255.0   # Em S2
+ no shutdown
+
+ip default-gateway 192.168.10.1
+Explicação:
+
+Configura o hostname e desativa a pesquisa de DNS.
+Configura a interface VLAN 10 com IPs para gerenciamento.
+Configurar VLANs e Trunks:
+
+vlan 10
+ name Gerenciamento
+
+vlan 333
+ name Native
+
+vlan 999
+ name ParkingLot
+
+interface FastEthernet0/1
+ switchport mode trunk
+ switchport trunk native vlan 333
+Explicação:
+
+Cria e nomeia as VLANs 10, 333 (Native), e 999 (ParkingLot).
+Configura a interface F0/1 como trunk e define a VLAN nativa como 333.
+Parte 3: Configuração de Segurança
+Configuração de Segurança de Porta:
+
+
+interface FastEthernet0/5
+ switchport mode access
+ switchport access vlan 10
+
+interface FastEthernet0/6
+ switchport mode access
+ switchport access vlan 10
+Explicação: Configura as portas F0/5 e F0/6 como portas de acesso associadas à VLAN 10.
+
+Desabilitar Portas Não Utilizadas e Mover para VLAN 999:
+
+
+interface range FastEthernet0/2-24
+ switchport mode access
+ switchport access vlan 999
+ shutdown
+Explicação: Move as portas não utilizadas para a VLAN 999 e as desabilita.
+
+Implementar Port Security:
+
+
+interface FastEthernet0/6
+ switchport port-security
+ switchport port-security maximum 3
+ switchport port-security violation restrict
+ switchport port-security aging time 60
+ switchport port-security aging type inactivity
+Explicação:
+
+Ativa o Port Security na porta F0/6 e define um máximo de 3 endereços MAC, modo de violação restrito e envelhecimento por inatividade.
+Parte 4: DHCP Snooping e Segurança Adicional
+
+
+ip dhcp snooping
+ip dhcp snooping vlan 10
+
+interface FastEthernet0/1
+ ip dhcp snooping trust
+
+interface FastEthernet0/18
+ ip dhcp snooping limit rate 5
+Explicação:
+
+Habilita o DHCP snooping e aplica na VLAN 10.
+Configura a porta F0/1 como confiável e limita a taxa de pacotes DHCP na porta F0/18.
+Configuração de PortFast e BPDU Guard:
+
+
+interface range FastEthernet0/5-6
+ spanning-tree portfast
+ spanning-tree bpduguard enable
+Explicação:
+
+Ativa o PortFast e BPDU Guard nas portas F0/5 e F0/6.
